@@ -2,23 +2,23 @@ const DEPOSIT_PCT = 0.4;
 
 const products = {
   phone: [
-    {sku:'PWR-001', name:'20W Fast-Charge Power Bank (10,000mAh)', price:16500, was:19900, icon:'🔋', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.8', sold:210, brand:'Anker'},
-    {sku:'PWR-002', name:'PD Fast-Charging USB-C Cable (1m)', price:3200, was:null, icon:'🔌', tag:null, tagLabel:'', rating:'4.7', sold:340, brand:'Baseus'},
+    {sku:'PWR-001', name:'20W Fast-Charge Power Bank (10,000mAh)', price:16500, was:19900, icon:'🔋', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.8', sold:210, brand:'Itel'},
+    {sku:'PWR-002', name:'PD Fast-Charging USB-C Cable (1m)', price:3200, was:null, icon:'🔌', tag:null, tagLabel:'', rating:'4.7', sold:340, brand:'Itel'},
     {sku:'PWR-003', name:'Wireless Earbuds w/ Charging Case', price:14800, was:18000, icon:'🎧', tag:'deal', tagLabel:'💸 Save 18%', rating:'4.6', sold:95, brand:'Oraimo'},
-    {sku:'PWR-004', name:'MagSafe-Style Wireless Charger', price:9500, was:null, icon:'📱', tag:'new', tagLabel:'✨ New', rating:'4.5', sold:40, brand:'Anker'},
-    {sku:'PWR-005', name:'Tempered Glass Screen Protector (2-pack)', price:2800, was:null, icon:'🛡️', tag:null, tagLabel:'', rating:'4.9', sold:410, brand:'UGREEN'},
-    {sku:'PWR-006', name:'Car Phone Mount, Dashboard Clip', price:5200, was:null, icon:'🚗', tag:null, tagLabel:'', rating:'4.6', sold:75, brand:'UGREEN'},
+    {sku:'PWR-004', name:'MagSafe-Style Wireless Charger', price:9500, was:null, icon:'📱', tag:'new', tagLabel:'✨ New', rating:'4.5', sold:40, brand:'Oraimo'},
+    {sku:'PWR-005', name:'Tempered Glass Screen Protector (2-pack)', price:2800, was:null, icon:'🛡️', tag:null, tagLabel:'', rating:'4.9', sold:410, brand:'Itel'},
+    {sku:'PWR-006', name:'Car Phone Mount, Dashboard Clip', price:5200, was:null, icon:'🚗', tag:null, tagLabel:'', rating:'4.6', sold:75, brand:'Oraimo'},
     {sku:'PWR-007', name:'Shockproof Phone Case (clear + solid)', price:4500, was:5900, icon:'📲', tag:'deal', tagLabel:'💸 Save 24%', rating:'4.7', sold:180, brand:'Tecno'},
     {sku:'PWR-008', name:'In-Ear Wired Earphones w/ Mic', price:3800, was:null, icon:'🎧', tag:null, tagLabel:'', rating:'4.4', sold:60, brand:'Oraimo'},
   ],
   laptop: [
-    {sku:'LAP-001', name:'7-in-1 USB-C Docking Hub', price:18500, was:null, icon:'🔗', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.8', sold:88, brand:'UGREEN'},
-    {sku:'LAP-002', name:'Wireless Mouse, Silent Click', price:7200, was:null, icon:'🖱️', tag:null, tagLabel:'', rating:'4.6', sold:130, brand:'Baseus'},
-    {sku:'LAP-003', name:'Adjustable Laptop Stand (Aluminium)', price:12800, was:15500, icon:'💻', tag:'deal', tagLabel:'💸 Save 17%', rating:'4.7', sold:65, brand:'UGREEN'},
+    {sku:'LAP-001', name:'7-in-1 USB-C Docking Hub', price:18500, was:null, icon:'🔗', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.8', sold:88, brand:'Itel'},
+    {sku:'LAP-002', name:'Wireless Mouse, Silent Click', price:7200, was:null, icon:'🖱️', tag:null, tagLabel:'', rating:'4.6', sold:130, brand:'Oraimo'},
+    {sku:'LAP-003', name:'Adjustable Laptop Stand (Aluminium)', price:12800, was:15500, icon:'💻', tag:'deal', tagLabel:'💸 Save 17%', rating:'4.7', sold:65, brand:'Itel'},
     {sku:'LAP-004', name:'15.6" Padded Laptop Sleeve', price:8900, was:null, icon:'🎒', tag:null, tagLabel:'', rating:'4.5', sold:52, brand:'Infinix'},
-    {sku:'LAP-005', name:'RGB Cooling Pad, Dual Fan', price:11400, was:null, icon:'❄️', tag:'new', tagLabel:'✨ New', rating:'4.4', sold:22, brand:'Baseus'},
+    {sku:'LAP-005', name:'RGB Cooling Pad, Dual Fan', price:11400, was:null, icon:'❄️', tag:'new', tagLabel:'✨ New', rating:'4.4', sold:22, brand:'Oraimo'},
     {sku:'LAP-006', name:'256GB Portable SSD, USB-C', price:24500, was:null, icon:'💾', tag:null, tagLabel:'', rating:'4.9', sold:44, brand:'Samsung'},
-    {sku:'LAP-007', name:'Structured Laptop Bag, Water-resistant', price:15800, was:null, icon:'💼', tag:null, tagLabel:'', rating:'4.6', sold:31, brand:'Anker'},
+    {sku:'LAP-007', name:'Structured Laptop Bag, Water-resistant', price:15800, was:null, icon:'💼', tag:null, tagLabel:'', rating:'4.6', sold:31, brand:'Itel'},
   ],
   gaming: [
     {sku:'GAM-001', name:'Bluetooth Gamepad (Mobile + PC)', price:13500, was:16000, icon:'🎮', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.7', sold:70, brand:'Apple'},
@@ -48,7 +48,7 @@ function renderGrid(id, items){
   `).join('');
 }
 
-const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Baseus','Anker','UGREEN'];
+const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Itel'];
 let activeBrand = 'All';
 
 function renderBrandChips(){
