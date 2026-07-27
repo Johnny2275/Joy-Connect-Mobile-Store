@@ -111,11 +111,15 @@ function renderDropdown(term){
     searchDropdown.innerHTML = '';
     return;
   }
-  const matches = allProducts.filter(p =>
-  p.name.toLowerCase().includes(q) ||
-  p.brand.toLowerCase().includes(q) ||
-  p.sku.toLowerCase().includes(q)
-).slice(0, 8);
+  const matches = allProducts.filter(p => {
+  const text = [
+    p.name,
+    p.brand,
+    p.sku
+  ].join(" ").toLowerCase();
+
+  return text.includes(q);
+}).slice(0, 8);
 
   if(matches.length === 0){
     searchDropdown.innerHTML = `<div class="sd-empty">No products match "${term}"</div>`;
