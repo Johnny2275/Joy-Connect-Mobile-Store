@@ -1,223 +1,351 @@
-const DEPOSIT_PCT = 0.4;
-
-const products = {
-  phone: [
-    {sku:'PWR-001', name:'20W Fast-Charge Power Bank (10,000mAh)', price:16500, was:19900, icon:'🔋', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.8', sold:210, brand:'Itel'},
-    {sku:'PWR-002', name:'PD Fast-Charging USB-C Cable (1m)', price:3200, was:null, icon:'🔌', tag:null, tagLabel:'', rating:'4.7', sold:340, brand:'Itel'},
-    {sku:'PWR-003', name:'Wireless Earbuds w/ Charging Case', price:14800, was:18000, icon:'🎧', tag:'deal', tagLabel:'💸 Save 18%', rating:'4.6', sold:95, brand:'Oraimo'},
-    {sku:'PWR-004', name:'MagSafe-Style Wireless Charger', price:9500, was:null, icon:'📱', tag:'new', tagLabel:'✨ New', rating:'4.5', sold:40, brand:'Oraimo'},
-    {sku:'PWR-005', name:'Tempered Glass Screen Protector (2-pack)', price:2800, was:null, icon:'🛡️', tag:null, tagLabel:'', rating:'4.9', sold:410, brand:'Itel'},
-    {sku:'PWR-006', name:'Car Phone Mount, Dashboard Clip', price:5200, was:null, icon:'🚗', tag:null, tagLabel:'', rating:'4.6', sold:75, brand:'Oraimo'},
-    {sku:'PWR-007', name:'Shockproof Phone Case (clear + solid)', price:4500, was:5900, icon:'📲', tag:'deal', tagLabel:'💸 Save 24%', rating:'4.7', sold:180, brand:'Tecno'},
-    {sku:'PWR-008', name:'In-Ear Wired Earphones w/ Mic', price:3800, was:null, icon:'🎧', tag:null, tagLabel:'', rating:'4.4', sold:60, brand:'Oraimo'},
-  ],
-  laptop: [
-    {sku:'LAP-001', name:'7-in-1 USB-C Docking Hub', price:18500, was:null, icon:'🔗', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.8', sold:88, brand:'Itel'},
-    {sku:'LAP-002', name:'Wireless Mouse, Silent Click', price:7200, was:null, icon:'🖱️', tag:null, tagLabel:'', rating:'4.6', sold:130, brand:'Oraimo'},
-    {sku:'LAP-003', name:'Adjustable Laptop Stand (Aluminium)', price:12800, was:15500, icon:'💻', tag:'deal', tagLabel:'💸 Save 17%', rating:'4.7', sold:65, brand:'Itel'},
-    {sku:'LAP-004', name:'15.6" Padded Laptop Sleeve', price:8900, was:null, icon:'🎒', tag:null, tagLabel:'', rating:'4.5', sold:52, brand:'Infinix'},
-    {sku:'LAP-005', name:'RGB Cooling Pad, Dual Fan', price:11400, was:null, icon:'❄️', tag:'new', tagLabel:'✨ New', rating:'4.4', sold:22, brand:'Oraimo'},
-    {sku:'LAP-006', name:'256GB Portable SSD, USB-C', price:24500, was:null, icon:'💾', tag:null, tagLabel:'', rating:'4.9', sold:44, brand:'Samsung'},
-    {sku:'LAP-007', name:'Structured Laptop Bag, Water-resistant', price:15800, was:null, icon:'💼', tag:null, tagLabel:'', rating:'4.6', sold:31, brand:'Itel'},
-  ],
-  gaming: [
-    {sku:'GAM-001', name:'Bluetooth Gamepad (Mobile + PC)', price:13500, was:16000, icon:'🎮', tag:'hot', tagLabel:'🔥 Best seller', rating:'4.7', sold:70, brand:'Apple'},
-    {sku:'GAM-002', name:'Wired USB Gamepad (PC/Console-style)', price:9800, was:null, icon:'🕹️', tag:null, tagLabel:'', rating:'4.5', sold:38, brand:'Infinix'},
-  ]
-};
-
-function naira(n){ return '₦' + n.toLocaleString('en-NG'); }
-
-function renderGrid(id, items){
-  const el = document.getElementById(id);
-  el.innerHTML = items.map(p => `
-    <div class="card" tabindex="0" data-sku="${p.sku}">
-      ${p.tag ? `<div class="tag ${p.tag}">${p.tagLabel}</div>` : ''}
-      <div class="card-thumb">${p.icon}</div>
-      <p class="card-name">${p.name}</p>
-      <div class="card-brand">${p.brand}</div>
-      <div class="stars">✅ In Stock</div>
-      <div class="price-row">
-        <span class="price-now">${naira(p.price)}</span>
-        ${p.was ? `<span class="price-was">${naira(p.was)}</span>` : ''}
-      </div>
-      <div class="card-deposit">
-        <span>Pay 40% now, balance on delivery.</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Itel'];
-let activeBrand = 'All';
-
-function renderBrandChips(){
-  const el = document.getElementById('brand-filter');
-  const all = ['All', ...BRANDS];
-  el.innerHTML = all.map(b => `
-    <button class="brand-chip${b === activeBrand ? ' active' : ''}" data-brand="${b}">${b}</button>
-  `).join('');
-  el.querySelectorAll('.brand-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      activeBrand = chip.dataset.brand;
-      renderBrandChips();
-      renderCatalog();
-    });
-  });
-}
-
-function renderCatalog(){
-  const categories = [
-    {key:'phone', blockId:'phone-block', gridId:'phone-grid'},
-    {key:'laptop', blockId:'laptop-block', gridId:'laptop-grid'},
-    {key:'gaming', blockId:'gaming-block', gridId:'gaming-grid'},
-  ];
-  let totalShown = 0;
-  categories.forEach(({key, blockId, gridId}) => {
-    const filtered = activeBrand === 'All'
-      ? products[key]
-      : products[key].filter(p => p.brand === activeBrand);
-    renderGrid(gridId, filtered);
-    document.getElementById(blockId).style.display = filtered.length === 0 ? 'none' : '';
-    totalShown += filtered.length;
-  });
-  document.getElementById('brand-no-results').style.display = totalShown === 0 ? 'block' : 'none';
-  attachCardHandlers();
-}
-
-renderBrandChips();
-renderCatalog();
-
-// Inline search logo: reveal beside the search bar once scrolled past the hero, in either direction
-document.getElementById('search-logo-img').src = document.querySelector('.hero-logo img').src;
-document.getElementById('footer-logo-img').src = document.querySelector('.hero-logo img').src;
-const searchLogoInline = document.getElementById('search-logo-inline');
-window.addEventListener('scroll', () => {
-  if(window.scrollY > 160){
-    searchLogoInline.classList.add('show');
-  } else {
-    searchLogoInline.classList.remove('show');
+:root{
+    --bg: #FFF9F4;
+    --card: #FFFFFF;
+    --ink: #1C1B29;
+    --ink-soft: #6B6B7B;
+    --pink: #FF3D6E;
+    --pink-deep: #E01F52;
+    --amber: #FFB020;
+    --amber-deep: #F08C00;
+    --mint: #16C79A;
+    --line: #F0E4DA;
+    --shadow: 0 10px 30px rgba(28,27,41,0.08);
   }
-}, {passive:true});
-
-const allProducts = [...products.phone, ...products.laptop, ...products.gaming];
-const searchInput = document.getElementById('search-input');
-const searchDropdown = document.getElementById('search-dropdown');
-
-function renderDropdown(term){
-  const q = term.trim().toLowerCase();
-  if(!q){
-    searchDropdown.classList.remove('open');
-    searchDropdown.innerHTML = '';
-    return;
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
   }
-  const matches = allProducts.filter(p =>
-    p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
-  ).slice(0, 8);
+  .display{font-family:'Poppins',sans-serif;}
 
-  if(matches.length === 0){
-    searchDropdown.innerHTML = `<div class="sd-empty">No products match "${term}"</div>`;
-  } else {
-    searchDropdown.innerHTML = matches.map(p => `
-      <div class="sd-item" data-sku="${p.sku}">
-        <div class="sd-thumb">${p.icon}</div>
-        <div class="sd-info">
-          <div class="sd-name">${p.name}</div>
-          <div class="sd-price">${naira(p.price)}</div>
-        </div>
-      </div>
-    `).join('');
+  /* TOP BAR */
+  .topbar{
+    background:var(--pink-deep);color:#fff;text-align:center;
+    font-size:13px;font-weight:600;padding:9px 12px;letter-spacing:.02em;
   }
-  searchDropdown.classList.add('open');
+  .topbar b{color:var(--amber);}
 
-  searchDropdown.querySelectorAll('.sd-item').forEach(item => {
-    item.addEventListener('click', () => {
-      openModal(item.dataset.sku);
-      searchDropdown.classList.remove('open');
-      searchInput.value = '';
-    });
-  });
-}
-
-searchInput.addEventListener('input', (e) => renderDropdown(e.target.value));
-searchInput.addEventListener('focus', (e) => { if(e.target.value.trim()) renderDropdown(e.target.value); });
-document.addEventListener('click', (e) => {
-  if(!e.target.closest('.search-wrap')){
-    searchDropdown.classList.remove('open');
+  /* HERO */
+  .hero{
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,var(--pink) 0%, var(--pink-deep) 55%, #8E1239 100%);
+    color:#fff;padding:52px 24px 64px;
   }
-});
-
-const overlay = document.getElementById('overlay');
-const orderView = document.getElementById('order-view');
-const confirmView = document.getElementById('confirm-view');
-let current = null;
-let qty = 1;
-
-function findProduct(sku){
-  return [...products.phone, ...products.laptop, ...products.gaming].find(p => p.sku === sku);
-}
-
-function openModal(sku){
-  current = findProduct(sku);
-  qty = 1;
-  orderView.style.display = 'block';
-  confirmView.classList.remove('open');
-  document.getElementById('m-tag').textContent = current.tagLabel || 'Available now';
-  document.getElementById('m-name').textContent = current.name;
-  document.getElementById('m-stars').innerHTML = `✅ In Stock`;
-  updateBreakdown();
-  overlay.classList.add('open');
-}
-
-function updateBreakdown(){
-  const total = current.price * qty;
-  const deposit = Math.round(total * DEPOSIT_PCT);
-  const balance = total - deposit;
-  document.getElementById('m-price').textContent = naira(current.price) + ' each';
-  document.getElementById('qty-val').textContent = qty;
-  document.getElementById('b-total').textContent = naira(total);
-  document.getElementById('b-deposit').textContent = naira(deposit);
-  document.getElementById('b-balance').textContent = naira(balance);
-  document.getElementById('pay-amt').textContent = naira(deposit);
-}
-
-function attachCardHandlers(){
-  document.querySelectorAll('.card').forEach(card => {
-    card.addEventListener('click', () => openModal(card.dataset.sku));
-    card.addEventListener('keypress', e => { if(e.key === 'Enter') openModal(card.dataset.sku); });
-  });
-}
-
-document.getElementById('close-btn').addEventListener('click', () => overlay.classList.remove('open'));
-overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('open'); });
-
-document.getElementById('qty-minus').addEventListener('click', () => { if(qty>1){qty--; updateBreakdown();} });
-document.getElementById('qty-plus').addEventListener('click', () => { qty++; updateBreakdown(); });
-
-document.getElementById('pay-btn').addEventListener('click', () => {
-  const name = document.getElementById('name-input').value.trim();
-  const phone = document.getElementById('phone-input').value.trim();
-  if(!name || !phone){
-    alert('Please add your name and phone number so we can reach you.');
-    return;
+  .hero::after{
+    content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;
+    background:radial-gradient(circle, rgba(255,176,32,0.35), transparent 70%);
+    border-radius:50%;
   }
-  // --- INTEGRATION POINT ---
-  // Replace this block with a real Paystack Inline call in your React app, e.g.:
-  //
-  // const handler = PaystackPop.setup({
-  //   key: 'pk_live_xxx',
-  //   email: `${phone}@placeholder.plugpoint.ng`,
-  //   amount: deposit * 100, // kobo
-  //   currency: 'NGN',
-  //   ref: 'JC-' + Date.now(),
-  //   metadata: { sku: current.sku, qty, name, phone, area },
-  //   callback: (response) => {
-  //     // insert order into Supabase here, mark status 'deposit_paid'
-  //   }
-  // });
-  // handler.openIframe();
-  const ref = 'JC-' + Math.floor(Math.random()*900000 + 100000);
-  document.getElementById('confirm-ref').textContent = ref;
-  orderView.style.display = 'none';
-  confirmView.classList.add('open');
-});
+  .hero-inner{max-width:1080px;margin:0 auto;position:relative;
+    display:flex;align-items:center;gap:36px;flex-wrap:wrap;}
+  .hero-logo{
+    background:#fff;border-radius:16px;padding:14px 18px;
+    box-shadow:0 12px 28px rgba(0,0,0,0.18);flex-shrink:0;
+    animation:logoBounce 1.1s ease;
+  }
+  @keyframes logoBounce{
+    0%{transform:translateY(-40px);opacity:0;}
+    45%{transform:translateY(0);opacity:1;}
+    60%{transform:translateY(-16px);}
+    75%{transform:translateY(0);}
+    87%{transform:translateY(-7px);}
+    100%{transform:translateY(0);}
+  }
+  .hero-logo img{height:110px;width:auto;display:block;}
+  .hero-text{flex:1;min-width:260px;}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .pill{
+    background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.3);
+    padding:6px 14px;border-radius:99px;font-size:12.5px;font-weight:600;
+    display:flex;align-items:center;gap:6px;
+  }
+  h1.display{
+    font-size:clamp(28px,5vw,46px);line-height:1.12;margin:0 0 14px;
+    font-weight:800;max-width:640px;
+  }
+  h1.display span{color:var(--amber);}
+  .hero p{font-size:16px;line-height:1.6;max-width:520px;margin:0 0 26px;opacity:.95;}
+  .trust-row{display:flex;gap:22px;flex-wrap:wrap;}
+  .trust-item{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;}
+  .trust-item .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);}
+
+  /* WHY BUY SECTION */
+  .why-buy{max-width:1080px;margin:0 auto;padding:38px 24px 8px;}
+  .why-buy h2{
+    font-family:'Poppins',sans-serif;font-size:21px;font-weight:700;
+    margin:0 0 18px;text-align:center;
+  }
+  .why-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:14px;
+  }
+  .why-item{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px 14px;text-align:center;font-size:13.5px;font-weight:600;
+    box-shadow:var(--shadow);
+  }
+  .why-item .why-icon{font-size:22px;display:block;margin-bottom:8px;}
+
+  /* SEARCH */
+  .search-wrap{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);padding:16px 0 18px;
+    display:flex;align-items:center;
+  }
+  .search-logo-inline{
+    max-width:0;overflow:hidden;opacity:0;flex-shrink:0;
+    transition:max-width .3s ease, opacity .22s ease, margin-right .3s ease;
+    margin-right:0;
+  }
+  .search-logo-inline.show{max-width:130px;opacity:1;margin-right:12px;}
+  .search-logo-inline img{height:40px;width:auto;display:block;}
+  .search-input-group{position:relative;flex:1;min-width:0;}
+  .search-wrap::before{
+    content:'';position:absolute;left:-24px;right:-24px;top:0;bottom:0;
+    background:var(--bg);z-index:-1;
+  }
+  .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+  #search-input{
+    width:100%;padding:13px 16px 13px 42px;border-radius:12px;
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    font-size:14.5px;font-family:'Inter',sans-serif;box-shadow:var(--shadow);
+  }
+  #search-input:focus{outline:none;border-color:var(--pink);}
+  .search-dropdown{
+    display:none;position:absolute;left:0;right:0;top:64px;
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 16px 34px rgba(28,27,41,0.16);
+    max-height:340px;overflow-y:auto;z-index:30;
+  }
+  .search-dropdown.open{display:block;}
+  .sd-item{
+    display:flex;align-items:center;gap:12px;padding:11px 16px;
+    cursor:pointer;border-bottom:1px solid var(--line);
+  }
+  .sd-item:last-child{border-bottom:none;}
+  .sd-item:hover{background:#FFF6EC;}
+  .sd-thumb{
+    width:38px;height:38px;border-radius:9px;flex-shrink:0;
+    background:linear-gradient(160deg,#FFF3E9,#FFE7D6);
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+  .sd-info{flex:1;min-width:0;}
+  .sd-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sd-price{font-size:12px;color:var(--ink-soft);}
+  .sd-empty{padding:16px;text-align:center;color:var(--ink-soft);font-size:13.5px;}
+
+  .brand-filter{
+    display:flex;gap:8px;flex-wrap:wrap;padding-bottom:20px;
+  }
+  .brand-chip{
+    padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    cursor:pointer;transition:all .15s ease;
+  }
+  .brand-chip:hover{border-color:var(--pink);}
+  .brand-chip.active{background:var(--pink); border-color:var(--pink); color:#fff;}
+  .no-results{
+    text-align:center;color:var(--ink-soft);
+    font-size:14px;padding:36px 12px;
+  }
+
+  /* WHATSAPP FLOATING BUTTON */
+  .whatsapp-fab{
+    position:fixed;bottom:22px;right:22px;z-index:200;
+    width:60px;height:60px;border-radius:50%;
+    background:linear-gradient(150deg,#2FE377,#1FAF56);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 24px rgba(15,120,60,0.4);
+    text-decoration:none;border:3px solid #fff;
+    transition:transform .2s ease;
+  }
+  .whatsapp-fab:hover{transform:scale(1.06);}
+  .whatsapp-fab svg{width:29px;height:29px;display:block;}
+  .whatsapp-fab-ring{
+    position:absolute;inset:-3px;border-radius:50%;
+    background:#25D366;opacity:0.5;
+    animation:waPulse 2.2s ease-out infinite;
+    z-index:-1;
+  }
+  @keyframes waPulse{
+    0%{transform:scale(1);opacity:0.5;}
+    100%{transform:scale(1.7);opacity:0;}
+  }
+  .whatsapp-label{
+    position:absolute;right:70px;top:50%;transform:translateY(-50%);
+    background:#1C1B29;color:#fff;font-size:12.5px;font-weight:600;
+    padding:8px 14px;border-radius:8px;white-space:nowrap;
+    opacity:0;pointer-events:none;transition:opacity .18s ease;
+  }
+  .whatsapp-fab:hover .whatsapp-label{opacity:1;}
+
+  /* CATALOG */
+  .catalog{max-width:1080px;margin:0 auto;padding:0 24px 24px;}
+  .section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:40px 0 18px;flex-wrap:wrap;gap:10px;
+  }
+  .section-head h2{font-family:'Poppins',sans-serif;font-size:21px;margin:0;font-weight:700;}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:-6px;margin-bottom:8px;}
+  .tab{
+    padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;
+    border:1.5px solid var(--line);background:#fff;cursor:pointer;color:var(--ink-soft);
+    transition:all .15s ease;
+  }
+  .tab.active{background:var(--pink-deep);color:#fff;border-color:var(--pink-deep);}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+    gap:18px;
+  }
+  .card{
+    background:var(--card);border-radius:16px;box-shadow:var(--shadow);
+    padding:14px;cursor:pointer;position:relative;
+    transition:transform .18s ease, box-shadow .18s ease;
+    border:1px solid var(--line);
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(28,27,41,0.14);}
+  .card:focus-visible{outline:2px solid var(--mint);outline-offset:2px;}
+  .tag{
+    position:absolute;top:12px;left:12px;z-index:2;
+    font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:7px;
+    color:#fff;letter-spacing:.02em;
+  }
+  .tag.hot{background:var(--pink);}
+  .tag.new{background:var(--mint);}
+  .tag.deal{background:var(--amber-deep);}
+  .card-thumb{
+    height:120px;border-radius:12px;margin-bottom:12px;
+    background:linear-gradient(160deg,#FFF3E9,#FFE7D6);
+    display:flex;align-items:center;justify-content:center;font-size:44px;
+  }
+  .card-name{font-weight:600;font-size:14.5px;margin:0 0 6px;line-height:1.35;min-height:38px;}
+  .card-brand{font-size:11px;color:var(--pink-deep);font-weight:700;margin-bottom:6px;letter-spacing:.02em;text-transform:uppercase;}
+  .stars{color:var(--amber-deep);font-size:12px;margin-bottom:6px;}
+  .sold{color:var(--ink-soft);font-size:11px;margin-left:4px;}
+  .price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+  .price-now{font-weight:800;font-size:17px;font-family:'Poppins',sans-serif;}
+  .price-was{font-size:12.5px;color:var(--ink-soft);text-decoration:line-through;}
+  .card-deposit{
+    background:#FFF6EC;border:1px dashed var(--amber-deep);border-radius:9px;
+    padding:7px 10px;font-size:11.5px;color:var(--amber-deep);font-weight:700;
+    text-align:center;
+  }
+
+  /* MODAL */
+  .overlay{
+    position:fixed;inset:0;background:rgba(28,27,41,0.6);
+    display:none;align-items:flex-end;justify-content:center;z-index:50;
+  }
+  .overlay.open{display:flex;}
+  @media(min-width:640px){.overlay{align-items:center;}}
+  .modal{
+    background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;
+    padding:26px;max-height:88vh;overflow-y:auto;
+  }
+  @media(min-width:640px){.modal{border-radius:20px;}}
+  .modal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;}
+  .modal-close{
+    background:#F3F0EE;border:none;color:var(--ink);font-size:16px;cursor:pointer;
+    line-height:1;padding:8px 10px;border-radius:50%;
+  }
+  .modal-tag{font-size:11px;font-weight:700;color:var(--pink-deep);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em;}
+  .modal h3{font-family:'Poppins',sans-serif;margin:0 0 6px;font-size:19px;font-weight:700;}
+  .modal .full-price{font-size:19px;font-weight:800;margin-bottom:4px;font-family:'Poppins',sans-serif;}
+  .modal .stars{margin-bottom:18px;}
+
+  .qty-row{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+  .qty-row button{
+    width:34px;height:34px;border-radius:10px;border:none;
+    background:var(--pink-deep);color:#fff;font-size:17px;cursor:pointer;
+  }
+  .qty-row span{font-weight:700;min-width:20px;text-align:center;font-family:'Poppins',sans-serif;}
+
+  .breakdown{background:#FAF7F4;border-radius:14px;padding:16px;margin-bottom:20px;}
+  .breakdown-row{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;color:var(--ink-soft);}
+  .breakdown-row.total{color:var(--ink);font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:10px;}
+  .breakdown-row b{color:var(--ink);font-weight:600;}
+  .breakdown-row.total b{color:var(--pink-deep);font-weight:800;font-size:15px;}
+
+  .deposit-meter-modal{
+    background:linear-gradient(90deg,#FFF3E9,#FFE7D6);
+    border-radius:12px;padding:12px 14px;margin-bottom:20px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .deposit-meter-modal .lbl{font-size:12.5px;color:var(--amber-deep);font-weight:700;}
+  .deposit-meter-modal .val{font-size:16px;font-weight:800;color:var(--amber-deep);font-family:'Poppins',sans-serif;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;}
+  .field input{
+    width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);
+    background:#fff;color:var(--ink);font-size:14px;font-family:'Inter',sans-serif;
+  }
+  .field input:focus{outline:none;border-color:var(--pink);}
+
+  .pay-btn{
+    width:100%;padding:15px;border-radius:12px;border:none;
+    background:linear-gradient(135deg,var(--pink),var(--pink-deep));
+    color:#fff;font-weight:800;font-size:15.5px;font-family:'Poppins',sans-serif;
+    cursor:pointer;margin-top:6px;box-shadow:0 8px 20px rgba(224,31,82,0.35);
+  }
+  .pay-btn:hover{filter:brightness(1.05);}
+  .pay-btn:focus-visible{outline:2px solid var(--mint);outline-offset:2px;}
+  .fine-print{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:10px;line-height:1.5;}
+
+  .confirm{display:none;text-align:center;padding:14px 4px 4px;}
+  .confirm.open{display:block;}
+  .confirm-icon{
+    width:56px;height:56px;border-radius:50%;background:#E9FBF5;
+    color:var(--mint);display:flex;align-items:center;justify-content:center;
+    margin:0 auto 16px;font-size:26px;font-weight:800;
+  }
+  .confirm h3{margin:0 0 8px;font-family:'Poppins',sans-serif;}
+  .confirm p{color:var(--ink-soft);font-size:13.5px;line-height:1.6;margin:0 0 20px;}
+  .confirm-ref{
+    font-family:'Inter',sans-serif;font-weight:700;font-size:12.5px;
+    background:#FAF7F4;padding:9px 14px;border-radius:10px;display:inline-block;color:var(--ink-soft);
+  }
+
+  .site-footer{
+    background:#1C1B29;color:#C7C6D6;margin-top:40px;
+    padding:44px 24px 0;
+  }
+  .footer-inner{max-width:1080px;margin:0 auto;}
+  .footer-grid{
+    display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px;
+    padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  @media(max-width:640px){.footer-grid{grid-template-columns:1fr;gap:28px;}}
+  .footer-logo-box{
+    display:inline-block;background:#fff;border-radius:12px;
+    padding:8px 12px;margin-bottom:14px;
+  }
+  .footer-brand img{height:38px;width:auto;display:block;}
+  .footer-brand p{font-size:13px;line-height:1.6;color:#9C9AAE;margin:0;}
+  .footer-col h4{
+    font-family:'Poppins',sans-serif;color:#fff;font-size:14px;
+    margin:0 0 14px;font-weight:600;
+  }
+  .footer-col ul{list-style:none;margin:0;padding:0;}
+  .footer-col li{margin-bottom:10px;}
+  .footer-col a{
+    color:#C7C6D6;text-decoration:none;font-size:13.5px;
+    transition:color .15s ease;
+  }
+  .footer-col a:hover{color:var(--pink);}
+  .footer-social{display:flex;flex-wrap:wrap;gap:10px;}
+  .footer-social a{
+    display:flex;align-items:center;gap:7px;
+    background:rgba(255,255,255,0.07);padding:7px 13px;border-radius:99px;
+    color:#C7C6D6;text-decoration:none;font-size:12.5px;font-weight:600;
+    transition:background .15s ease, color .15s ease;
+  }
+  .footer-social a:hover{background:var(--pink);color:#fff;}
+  .footer-bottom{
+    max-width:1080px;margin:0 auto;padding:20px 0 26px;
+    text-align:center;font-size:12px;color:#8B899C;
+  }
