@@ -349,3 +349,48 @@
     max-width:1080px;margin:0 auto;padding:20px 0 26px;
     text-align:center;font-size:12px;color:#8B899C;
   }
+
+/* MOBILE REFINEMENTS */
+@media(max-width:600px){
+  .hero{padding:36px 16px 40px;}
+  .hero-inner{gap:16px;}
+  .hero-logo{padding:8px 10px;border-radius:12px;}
+  .hero-logo img{height:64px;}
+  .hero-text h1.display{font-size:24px;line-height:1.18;}
+  .hero-text p{font-size:14px;}
+  .trust-row{gap:10px 16px;}
+  .trust-item{font-size:12px;}
+  .pill{font-size:11.5px;padding:5px 11px;}
+
+  .why-buy{padding:28px 16px 4px;}
+  .why-grid{grid-template-columns:repeat(2,1fr);}
+
+  .catalog{padding:0 16px 16px;}
+  .search-wrap{padding:12px 0 14px;}
+  .search-logo-inline.show{max-width:64px;margin-right:8px;}
+  .search-logo-inline img{height:32px;}
+  #search-input{font-size:14px;padding:11px 14px 11px 38px;}
+
+  .brand-filter{
+    flex-wrap:nowrap;overflow-x:auto;padding-bottom:14px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .brand-filter::-webkit-scrollbar{display:none;}
+  .brand-chip{flex-shrink:0;padding:7px 14px;font-size:12.5px;}
+
+  .section-head h2{font-size:17px;}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .card{padding:11px;}
+  .card-thumb{height:80px;font-size:32px;}
+  .card-name{font-size:13px;min-height:34px;}
+  .price-now{font-size:15px;}
+
+  .modal{padding:20px;}
+
+  .whatsapp-fab{width:52px;height:52px;bottom:16px;right:16px;}
+  .whatsapp-fab svg{width:25px;height:25px;}
+  .whatsapp-label{display:none;}
+
+  .footer-brand p{font-size:12.5px;}
+  .footer-social a{font-size:12px;padding:6px 11px;}
+}
