@@ -7,40 +7,72 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const CATEGORY_ICON = {phone:'📱', laptop:'💻', gaming:'🎮'};
 
+// Fallback data used only if the live Supabase connection can't be reached
+// (e.g. a blocked preview environment, or a temporary outage) so the store
+// never shows completely empty or stuck loading.
+const FALLBACK_PRODUCTS = {
+  phone: [
+    {sku:'PWR-001', name:'20W Fast-Charge Power Bank (10,000mAh)', price:16500, was:19900, icon:'🔋', tag:'hot', tagLabel:'🔥 Best seller', brand:'Itel', imageUrl:null, inStock:true},
+    {sku:'PWR-002', name:'PD Fast-Charging USB-C Cable (1m)', price:3200, was:null, icon:'🔌', tag:null, tagLabel:'', brand:'Itel', imageUrl:null, inStock:true},
+    {sku:'PWR-003', name:'Wireless Earbuds w/ Charging Case', price:14800, was:18000, icon:'🎧', tag:'deal', tagLabel:'💸 Save 18%', brand:'Oraimo', imageUrl:null, inStock:true},
+    {sku:'PWR-004', name:'MagSafe-Style Wireless Charger', price:9500, was:null, icon:'📱', tag:null, tagLabel:'', brand:'Oraimo', imageUrl:null, inStock:true},
+    {sku:'PWR-005', name:'Tempered Glass Screen Protector (2-pack)', price:2800, was:null, icon:'🛡️', tag:null, tagLabel:'', brand:'Itel', imageUrl:null, inStock:true},
+    {sku:'PWR-006', name:'Car Phone Mount, Dashboard Clip', price:5200, was:null, icon:'🚗', tag:null, tagLabel:'', brand:'Oraimo', imageUrl:null, inStock:true},
+    {sku:'PWR-007', name:'Shockproof Phone Case (clear + solid)', price:4500, was:5900, icon:'📲', tag:'deal', tagLabel:'💸 Save 24%', brand:'Tecno', imageUrl:null, inStock:true},
+    {sku:'PWR-008', name:'In-Ear Wired Earphones w/ Mic', price:3800, was:null, icon:'🎧', tag:null, tagLabel:'', brand:'Oraimo', imageUrl:null, inStock:true},
+  ],
+  laptop: [
+    {sku:'LAP-001', name:'7-in-1 USB-C Docking Hub', price:18500, was:null, icon:'🔗', tag:'hot', tagLabel:'🔥 Best seller', brand:'Itel', imageUrl:null, inStock:true},
+    {sku:'LAP-002', name:'Wireless Mouse, Silent Click', price:7200, was:null, icon:'🖱️', tag:null, tagLabel:'', brand:'Oraimo', imageUrl:null, inStock:true},
+    {sku:'LAP-003', name:'Adjustable Laptop Stand (Aluminium)', price:12800, was:15500, icon:'💻', tag:'deal', tagLabel:'💸 Save 17%', brand:'Itel', imageUrl:null, inStock:true},
+    {sku:'LAP-004', name:'15.6" Padded Laptop Sleeve', price:8900, was:null, icon:'🎒', tag:null, tagLabel:'', brand:'Infinix', imageUrl:null, inStock:true},
+    {sku:'LAP-005', name:'RGB Cooling Pad, Dual Fan', price:11400, was:null, icon:'❄️', tag:null, tagLabel:'', brand:'Oraimo', imageUrl:null, inStock:true},
+    {sku:'LAP-006', name:'256GB Portable SSD, USB-C', price:24500, was:null, icon:'💾', tag:null, tagLabel:'', brand:'Samsung', imageUrl:null, inStock:true},
+    {sku:'LAP-007', name:'Structured Laptop Bag, Water-resistant', price:15800, was:null, icon:'💼', tag:null, tagLabel:'', brand:'Itel', imageUrl:null, inStock:true},
+  ],
+  gaming: [
+    {sku:'GAM-001', name:'Bluetooth Gamepad (Mobile + PC)', price:13500, was:16000, icon:'🎮', tag:'hot', tagLabel:'🔥 Best seller', brand:'Apple', imageUrl:null, inStock:true},
+    {sku:'GAM-002', name:'Wired USB Gamepad (PC/Console-style)', price:9800, was:null, icon:'🕹️', tag:null, tagLabel:'', brand:'Infinix', imageUrl:null, inStock:true},
+  ]
+};
+
 let products = {phone:[], laptop:[], gaming:[]};
 let allProducts = [];
 
 async function loadProducts(){
-  const { data, error } = await sb.from('products').select('*');
+  try {
+    const fetchPromise = sb.from('products').select('*');
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase request timed out')), 6000));
+    const { data, error } = await Promise.race([fetchPromise, timeout]);
 
-  if(error){
-    console.error('Supabase fetch error:', error);
-    ['phone-grid','laptop-grid','gaming-grid'].forEach(id => {
-      document.getElementById(id).innerHTML = `<div class="sd-empty">Couldn't load products right now. Please refresh.</div>`;
+    if(error) throw error;
+    if(!data || data.length === 0) throw new Error('No products returned');
+
+    const grouped = {phone:[], laptop:[], gaming:[]};
+    data.forEach(row => {
+      const cat = row.category;
+      if(!grouped[cat]) grouped[cat] = [];
+      const hasDiscount = row.old_price && row.old_price > row.price;
+      const discountPct = hasDiscount ? Math.round((1 - row.price / row.old_price) * 100) : 0;
+      grouped[cat].push({
+        sku: row.sku,
+        name: row.name,
+        price: row.price,
+        was: row.old_price || null,
+        icon: CATEGORY_ICON[cat] || '📦',
+        imageUrl: row.image_url || null,
+        tag: row.featured ? 'hot' : (hasDiscount ? 'deal' : null),
+        tagLabel: row.featured ? '🔥 Best seller' : (hasDiscount ? `💸 Save ${discountPct}%` : ''),
+        brand: row.brand,
+        inStock: row.in_stock !== false,
+      });
     });
-    return {phone:[], laptop:[], gaming:[]};
+    return grouped;
+
+  } catch(err){
+    console.warn('Supabase unavailable, showing sample data instead:', err.message || err);
+    return FALLBACK_PRODUCTS;
   }
-
-  const grouped = {phone:[], laptop:[], gaming:[]};
-  (data || []).forEach(row => {
-    const cat = row.category;
-    if(!grouped[cat]) grouped[cat] = [];
-    const hasDiscount = row.old_price && row.old_price > row.price;
-    const discountPct = hasDiscount ? Math.round((1 - row.price / row.old_price) * 100) : 0;
-    grouped[cat].push({
-      sku: row.sku,
-      name: row.name,
-      price: row.price,
-      was: row.old_price || null,
-      icon: CATEGORY_ICON[cat] || '📦',
-      imageUrl: row.image_url || null,
-      tag: row.featured ? 'hot' : (hasDiscount ? 'deal' : null),
-      tagLabel: row.featured ? '🔥 Best seller' : (hasDiscount ? `💸 Save ${discountPct}%` : ''),
-      brand: row.brand,
-      inStock: row.in_stock !== false,
-    });
-  });
-  return grouped;
 }
 
 function naira(n){ return '₦' + n.toLocaleString('en-NG'); }
