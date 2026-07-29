@@ -265,7 +265,9 @@ function renderDropdown(term){
     return;
   }
   const matches = allProducts.filter(p =>
-    p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+    p.name.toLowerCase().includes(q) ||
+    p.sku.toLowerCase().includes(q) ||
+    (p.brand && p.brand.toLowerCase().includes(q))
   ).slice(0, 8);
 
   if(matches.length === 0){
@@ -348,29 +350,65 @@ overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classL
 document.getElementById('qty-minus').addEventListener('click', () => { if(qty>1){qty--; updateBreakdown();} });
 document.getElementById('qty-plus').addEventListener('click', () => { qty++; updateBreakdown(); });
 
-document.getElementById('pay-btn').addEventListener('click', () => {
+document.getElementById('pay-btn').addEventListener('click', async () => {
   const name = document.getElementById('name-input').value.trim();
   const phone = document.getElementById('phone-input').value.trim();
+  const area = document.getElementById('area-input').value.trim();
   if(!name || !phone){
     alert('Please add your name and phone number so we can reach you.');
     return;
   }
+
+  const payBtn = document.getElementById('pay-btn');
+  const originalLabel = payBtn.innerHTML;
+  payBtn.disabled = true;
+  payBtn.innerHTML = 'Saving your order…';
+
+  const total = current.price * qty;
+  const deposit = Math.round(total * DEPOSIT_PCT);
+  const balance = total - deposit;
+  const ref = 'JC-' + Math.floor(Math.random()*900000 + 100000);
+
   // --- INTEGRATION POINT ---
-  // Replace this block with a real Paystack Inline call, e.g.:
+  // Once you have real Paystack keys, trigger PaystackPop.setup() here instead,
+  // and only run the Supabase insert below inside its callback after payment
+  // actually succeeds, with status: 'deposit_paid' instead of 'pending_payment'.
   //
   // const handler = PaystackPop.setup({
   //   key: 'pk_live_xxx',
   //   email: `${phone}@placeholder.joyconnectmobile.ng`,
   //   amount: deposit * 100, // kobo
   //   currency: 'NGN',
-  //   ref: 'JC-' + Date.now(),
+  //   ref: ref,
   //   metadata: { sku: current.sku, qty, name, phone, area },
-  //   callback: (response) => {
-  //     // insert order into Supabase here, mark status 'deposit_paid'
-  //   }
+  //   callback: (response) => { ...insert below... }
   // });
   // handler.openIframe();
-  const ref = 'JC-' + Math.floor(Math.random()*900000 + 100000);
+
+  const { error } = await sb.from('orders').insert({
+    sku: current.sku,
+    product_name: current.name,
+    quantity: qty,
+    unit_price: current.price,
+    total_amount: total,
+    deposit_amount: deposit,
+    balance_amount: balance,
+    customer_name: name,
+    customer_phone: phone,
+    delivery_area: area || null,
+    reference: ref,
+    status: 'pending_payment',
+  });
+
+  payBtn.disabled = false;
+  payBtn.innerHTML = originalLabel;
+
+  if(error){
+    console.error('Order save failed:', error);
+    alert("Sorry, we couldn't save your order right now. Please try again or contact us on WhatsApp.");
+    return;
+  }
+
   document.getElementById('confirm-ref').textContent = ref;
   orderView.style.display = 'none';
   confirmView.classList.add('open');
