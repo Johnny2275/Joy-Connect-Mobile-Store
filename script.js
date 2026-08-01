@@ -1,5 +1,16 @@
 const DEPOSIT_PCT = 0.4;
 
+// --- APPLY CONTACT & SOCIAL LINKS FROM config.js ---
+(function applyContactConfig(){
+  const wa = `https://wa.me/${CONTACT_CONFIG.whatsappNumber}`;
+  document.getElementById('whatsapp-fab').href = wa;
+  document.getElementById('social-whatsapp').href = wa;
+  document.getElementById('social-facebook').href = CONTACT_CONFIG.facebookUrl;
+  document.getElementById('social-instagram').href = CONTACT_CONFIG.instagramUrl;
+  document.getElementById('social-tiktok').href = CONTACT_CONFIG.tiktokUrl;
+  document.getElementById('social-email').href = `mailto:${CONTACT_CONFIG.email}`;
+})();
+
 // --- SUPABASE CONNECTION ---
 const SUPABASE_URL = 'https://gkskksiqpnhecbfcgdzq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_V8Uxpe4R_nxPThef25rvOQ_ipEbkdj3';
