@@ -20,6 +20,6 @@ const CONTACT_CONFIG = {
   tiktokUrl: 'https://tiktok.com/@joyconnectmobile',
 
   // Contact email address customers can reach you on.
-  email: 'hello@joyconnectmobile.ng',
+  email: 'joyconnectmobile@gmail.com',
 
 };
