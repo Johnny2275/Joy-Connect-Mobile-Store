@@ -144,106 +144,6 @@ function renderCatalog(){
   attachCardHandlers();
 }
 
-// --- COVER FLOW: featured products slider ---
-const FEATURED_SKUS = ['PWR-001','PWR-007','LAP-001','LAP-003','GAM-001','PWR-003'];
-const cfTrack = document.getElementById('cf-track');
-const cfDots = document.getElementById('cf-dots');
-let cfIndex = 0;
-let cfItems = [];
-
-function getFeaturedProducts(){
-  return FEATURED_SKUS.map(sku => allProducts.find(p => p.sku === sku)).filter(Boolean);
-}
-
-function renderCoverflow(){
-  if(cfItems.length === 0){
-    cfTrack.innerHTML = '';
-    return;
-  }
-  cfTrack.innerHTML = cfItems.map((p, i) => `
-    <div class="cf-card${i === cfIndex ? ' cf-active' : ''}" data-index="${i}" data-sku="${p.sku}">
-      <div class="cf-thumb">${productThumb(p)}</div>
-      <div class="cf-name">${p.name}</div>
-      <div class="cf-price">${naira(p.price)}</div>
-    </div>
-  `).join('');
-
-  cfTrack.querySelectorAll('.cf-card').forEach(card => {
-    const i = Number(card.dataset.index);
-    const offset = i - cfIndex;
-    const abs = Math.abs(offset);
-    const x = offset * 130;
-    const rotate = offset === 0 ? 0 : (offset > 0 ? -35 : 35);
-    const scale = offset === 0 ? 1 : 0.78;
-    const z = offset === 0 ? 10 : (10 - abs);
-    const opacity = abs > 2 ? 0 : 1;
-    card.style.transform = `translateX(${x}px) rotateY(${rotate}deg) scale(${scale})`;
-    card.style.zIndex = z;
-    card.style.opacity = opacity;
-
-    card.addEventListener('click', () => {
-      if(i === cfIndex){
-        openModal(card.dataset.sku);
-      } else {
-        cfIndex = i;
-        renderCoverflow();
-        renderCfDots();
-      }
-    });
-  });
-}
-
-function renderCfDots(){
-  cfDots.innerHTML = cfItems.map((_, i) => `
-    <span class="cf-dot${i === cfIndex ? ' active' : ''}" data-index="${i}"></span>
-  `).join('');
-  cfDots.querySelectorAll('.cf-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      cfIndex = Number(dot.dataset.index);
-      renderCoverflow();
-      renderCfDots();
-    });
-  });
-}
-
-document.getElementById('cf-prev').addEventListener('click', () => {
-  if(cfItems.length === 0) return;
-  cfIndex = (cfIndex - 1 + cfItems.length) % cfItems.length;
-  renderCoverflow();
-  renderCfDots();
-});
-document.getElementById('cf-next').addEventListener('click', () => {
-  if(cfItems.length === 0) return;
-  cfIndex = (cfIndex + 1) % cfItems.length;
-  renderCoverflow();
-  renderCfDots();
-});
-
-// Touch swipe support for mobile
-const cfEl = document.getElementById('coverflow');
-let cfTouchStartX = 0;
-let cfTouchEndX = 0;
-
-cfEl.addEventListener('touchstart', (e) => {
-  cfTouchStartX = e.changedTouches[0].screenX;
-}, {passive:true});
-
-cfEl.addEventListener('touchend', (e) => {
-  if(cfItems.length === 0) return;
-  cfTouchEndX = e.changedTouches[0].screenX;
-  const delta = cfTouchEndX - cfTouchStartX;
-  const SWIPE_THRESHOLD = 40;
-  if(delta > SWIPE_THRESHOLD){
-    cfIndex = (cfIndex - 1 + cfItems.length) % cfItems.length;
-    renderCoverflow();
-    renderCfDots();
-  } else if(delta < -SWIPE_THRESHOLD){
-    cfIndex = (cfIndex + 1) % cfItems.length;
-    renderCoverflow();
-    renderCfDots();
-  }
-}, {passive:true});
-
 // Inline search logo: reveal beside the search bar once scrolled past the hero, in either direction
 const searchLogoInline = document.getElementById('search-logo-inline');
 window.addEventListener('scroll', () => {
@@ -422,12 +322,9 @@ async function init(){
 
   products = await loadProducts();
   allProducts = [...products.phone, ...products.laptop, ...products.gaming];
-  cfItems = getFeaturedProducts();
 
   renderBrandChips();
   renderCatalog();
-  renderCoverflow();
-  renderCfDots();
 }
 
 init();
