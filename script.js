@@ -71,7 +71,13 @@ async function loadProducts(){
         price: row.price,
         was: row.old_price || null,
         icon: CATEGORY_ICON[cat] || '📦',
-        imageUrl: row.image_url || null,
+        images: [
+    row.image_url,
+    row.image_url2,
+    row.image_url3,
+    row.image_url4,
+    row.image_url5
+].filter(Boolean),
         tag: row.featured ? 'hot' : (hasDiscount ? 'deal' : null),
         tagLabel: row.featured ? '🔥 Best seller' : (hasDiscount ? `💸 Save ${discountPct}%` : ''),
         brand: row.brand,
