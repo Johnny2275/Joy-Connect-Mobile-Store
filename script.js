@@ -99,7 +99,6 @@ function productThumb(p){
         ? `<img src="${p.images[0]}" alt="${p.name}" class="product-thumb">`
         : p.icon;
 }
-}
 
 function renderGrid(id, items){
   const el = document.getElementById(id);
