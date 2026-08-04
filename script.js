@@ -231,6 +231,32 @@ function findProduct(sku){
 
 function openModal(sku){
   current = findProduct(sku);
+const mainImage = document.getElementById("modal-main-image");
+const thumbs = document.getElementById("modal-thumbnails");
+
+thumbs.innerHTML = "";
+
+if(current.images && current.images.length){
+
+    mainImage.src = current.images[0];
+
+    current.images.forEach(img =>{
+
+        const thumb = document.createElement("img");
+
+        thumb.src = img;
+
+        thumb.onclick = ()=>{
+
+            mainImage.src = img;
+
+        };
+
+        thumbs.appendChild(thumb);
+
+    });
+
+}
   if(!current) return;
   qty = 1;
   orderView.style.display = 'block';
