@@ -95,9 +95,10 @@ async function loadProducts(){
 function naira(n){ return '₦' + n.toLocaleString('en-NG'); }
 
 function productThumb(p){
-  return p.imageUrl
-    ? `<img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`
-    : p.icon;
+    return p.images && p.images.length
+        ? `<img src="${p.images[0]}" alt="${p.name}" class="product-thumb">`
+        : p.icon;
+}
 }
 
 function renderGrid(id, items){
