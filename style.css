@@ -441,3 +441,45 @@
 .thumbnail-row img:hover{
     border-color:#FF3D6E;
 }
+
+.image-lightbox{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.92);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.image-lightbox img{
+    max-width:90%;
+    max-height:90%;
+    object-fit:contain;
+    border-radius:12px;
+    animation:zoomIn .25s ease;
+}
+
+#lightbox-close{
+    position:absolute;
+    top:25px;
+    right:35px;
+    color:#fff;
+    font-size:42px;
+    cursor:pointer;
+    user-select:none;
+}
+
+@keyframes zoomIn{
+
+    from{
+        transform:scale(.8);
+        opacity:0;
+    }
+
+    to{
+        transform:scale(1);
+        opacity:1;
+    }
+
+}
