@@ -461,12 +461,13 @@
 }
 
 #lightbox-close{
-    position:absolute;
+    position:fixed;
     top:25px;
     right:35px;
     color:#fff;
     font-size:42px;
     cursor:pointer;
+    z-index:100000;
     user-select:none;
 }
 
