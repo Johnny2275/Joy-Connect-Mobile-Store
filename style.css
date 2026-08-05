@@ -483,3 +483,12 @@
     }
 
 }
+
+.main-image img{
+    cursor:zoom-in;
+    transition:.3s;
+}
+
+.main-image img:hover{
+    transform:scale(1.03);
+}
