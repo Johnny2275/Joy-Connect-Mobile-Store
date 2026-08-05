@@ -457,7 +457,7 @@
     max-height:90%;
     object-fit:contain;
     border-radius:12px;
-    animation:zoomIn .25s ease;
+    z-index:99999;
 }
 
 #lightbox-close{
