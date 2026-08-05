@@ -240,21 +240,30 @@ if(current.images && current.images.length){
 
     mainImage.src = current.images[0];
 
-    current.images.forEach(img =>{
+// Make the main image clickable
+mainImage.onclick = () => {
+    const lightbox = document.getElementById("image-lightbox");
+    const lightboxImg = document.getElementById("lightbox-image");
 
-        const thumb = document.createElement("img");
+    lightboxImg.src = mainImage.src;
+    lightbox.style.display = "flex";
+};
 
-        thumb.src = img;
+current.images.forEach(img => {
 
-        thumb.onclick = ()=>{
+    const thumb = document.createElement("img");
 
-            mainImage.src = img;
+    thumb.src = img;
 
-        };
+    thumb.onclick = () => {
 
-        thumbs.appendChild(thumb);
+        mainImage.src = img;
 
-    });
+    };
+
+    thumbs.appendChild(thumb);
+
+});
 
 }
   if(!current) return;
