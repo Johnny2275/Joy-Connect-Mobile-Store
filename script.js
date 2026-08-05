@@ -380,3 +380,30 @@ async function init(){
 }
 
 init();
+
+// =========================
+// IMAGE LIGHTBOX
+// =========================
+
+const lightbox = document.getElementById("image-lightbox");
+const lightboxImg = document.getElementById("lightbox-image");
+const lightboxClose = document.getElementById("lightbox-close");
+
+// Close with X
+lightboxClose.onclick = () => {
+    lightbox.style.display = "none";
+};
+
+// Close when clicking outside the image
+lightbox.onclick = (e) => {
+    if (e.target === lightbox) {
+        lightbox.style.display = "none";
+    }
+};
+
+// Close with ESC key
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        lightbox.style.display = "none";
+    }
+});
