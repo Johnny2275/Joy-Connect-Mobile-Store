@@ -1,14 +1,28 @@
 const DEPOSIT_PCT = 0.4;
 
 // --- APPLY CONTACT & SOCIAL LINKS FROM config.js ---
+// Wrapped safely so a missing element (e.g. index.html not updated yet)
+// or missing config.js never breaks the rest of the site.
 (function applyContactConfig(){
-  const wa = `https://wa.me/${CONTACT_CONFIG.whatsappNumber}`;
-  document.getElementById('whatsapp-fab').href = wa;
-  document.getElementById('social-whatsapp').href = wa;
-  document.getElementById('social-facebook').href = CONTACT_CONFIG.facebookUrl;
-  document.getElementById('social-instagram').href = CONTACT_CONFIG.instagramUrl;
-  document.getElementById('social-tiktok').href = CONTACT_CONFIG.tiktokUrl;
-  document.getElementById('social-email').href = `mailto:${CONTACT_CONFIG.email}`;
+  try {
+    if(typeof CONTACT_CONFIG === 'undefined'){
+      console.warn('config.js not loaded — skipping contact link setup.');
+      return;
+    }
+    const setHref = (id, value) => {
+      const el = document.getElementById(id);
+      if(el) el.href = value;
+    };
+    const wa = `https://wa.me/${CONTACT_CONFIG.whatsappNumber}`;
+    setHref('whatsapp-fab', wa);
+    setHref('social-whatsapp', wa);
+    setHref('social-facebook', CONTACT_CONFIG.facebookUrl);
+    setHref('social-instagram', CONTACT_CONFIG.instagramUrl);
+    setHref('social-tiktok', CONTACT_CONFIG.tiktokUrl);
+    setHref('social-email', `mailto:${CONTACT_CONFIG.email}`);
+  } catch(err){
+    console.warn('Could not apply contact config:', err);
+  }
 })();
 
 // --- SUPABASE CONNECTION ---
@@ -71,13 +85,7 @@ async function loadProducts(){
         price: row.price,
         was: row.old_price || null,
         icon: CATEGORY_ICON[cat] || '📦',
-        images: [
-    row.image_url,
-    row.image_url2,
-    row.image_url3,
-    row.image_url4,
-    row.image_url5
-].filter(Boolean),
+        images: [row.image_url, row.image_url2, row.image_url3, row.image_url4, row.image_url5].filter(Boolean),
         tag: row.featured ? 'hot' : (hasDiscount ? 'deal' : null),
         tagLabel: row.featured ? '🔥 Best seller' : (hasDiscount ? `💸 Save ${discountPct}%` : ''),
         brand: row.brand,
@@ -95,9 +103,9 @@ async function loadProducts(){
 function naira(n){ return '₦' + n.toLocaleString('en-NG'); }
 
 function productThumb(p){
-    return p.images && p.images.length
-        ? `<img src="${p.images[0]}" alt="${p.name}" class="product-thumb">`
-        : p.icon;
+  return p.images && p.images.length
+    ? `<img src="${p.images[0]}" alt="${p.name}" draggable="false" class="product-thumb">`
+    : p.icon;
 }
 
 function renderGrid(id, items){
@@ -231,41 +239,6 @@ function findProduct(sku){
 
 function openModal(sku){
   current = findProduct(sku);
-const mainImage = document.getElementById("modal-main-image");
-const thumbs = document.getElementById("modal-thumbnails");
-
-thumbs.innerHTML = "";
-
-if(current.images && current.images.length){
-
-    mainImage.src = current.images[0];
-
-// Make the main image clickable
-mainImage.onclick = () => {
-    const lightbox = document.getElementById("image-lightbox");
-    const lightboxImg = document.getElementById("lightbox-image");
-
-    lightboxImg.src = mainImage.src;
-    lightbox.style.display = "flex";
-};
-
-current.images.forEach(img => {
-
-    const thumb = document.createElement("img");
-
-    thumb.src = img;
-
-    thumb.onclick = () => {
-
-        mainImage.src = img;
-
-    };
-
-    thumbs.appendChild(thumb);
-
-});
-
-}
   if(!current) return;
   qty = 1;
   orderView.style.display = 'block';
@@ -273,8 +246,47 @@ current.images.forEach(img => {
   document.getElementById('m-tag').textContent = current.tagLabel || 'Available now';
   document.getElementById('m-name').textContent = current.name;
   document.getElementById('m-stars').innerHTML = current.inStock ? '✅ In Stock' : '⏳ Out of Stock';
+  renderModalGallery(current);
   updateBreakdown();
   overlay.classList.add('open');
+}
+
+function renderModalGallery(product){
+  const galleryWrap = document.getElementById('modal-gallery');
+  const mainImage = document.getElementById('modal-main-image');
+  const thumbs = document.getElementById('modal-thumbnails');
+  if(!galleryWrap || !mainImage || !thumbs) return;
+
+  if(!product.images || product.images.length === 0){
+    galleryWrap.style.display = 'none';
+    return;
+  }
+
+  galleryWrap.style.display = 'block';
+  mainImage.src = product.images[0];
+  mainImage.onclick = () => openLightbox(mainImage.src);
+
+  thumbs.innerHTML = '';
+  product.images.forEach((imgSrc, i) => {
+    const thumb = document.createElement('img');
+    thumb.src = imgSrc;
+    thumb.alt = `${product.name} photo ${i + 1}`;
+    if(i === 0) thumb.classList.add('active-thumb');
+    thumb.addEventListener('click', () => {
+      mainImage.src = imgSrc;
+      thumbs.querySelectorAll('img').forEach(t => t.classList.remove('active-thumb'));
+      thumb.classList.add('active-thumb');
+    });
+    thumbs.appendChild(thumb);
+  });
+}
+
+function openLightbox(src){
+  const lightbox = document.getElementById('image-lightbox');
+  const lightboxImg = document.getElementById('lightbox-image');
+  if(!lightbox || !lightboxImg) return;
+  lightboxImg.src = src;
+  lightbox.classList.add('open');
 }
 
 function updateBreakdown(){
@@ -382,28 +394,20 @@ async function init(){
 init();
 
 // =========================
-// IMAGE LIGHTBOX
+// IMAGE LIGHTBOX (close handlers)
 // =========================
+(function setupLightbox(){
+  const lightbox = document.getElementById('image-lightbox');
+  const lightboxClose = document.getElementById('lightbox-close');
+  if(!lightbox || !lightboxClose) return;
 
-const lightbox = document.getElementById("image-lightbox");
-const lightboxImg = document.getElementById("lightbox-image");
-const lightboxClose = document.getElementById("lightbox-close");
+  const closeLightbox = () => lightbox.classList.remove('open');
 
-// Close with X
-lightboxClose.onclick = () => {
-    lightbox.style.display = "none";
-};
-
-// Close when clicking outside the image
-lightbox.onclick = (e) => {
-    if (e.target === lightbox) {
-        lightbox.style.display = "none";
-    }
-};
-
-// Close with ESC key
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        lightbox.style.display = "none";
-    }
-});
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', (e) => {
+    if(e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeLightbox();
+  });
+})();
