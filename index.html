@@ -122,16 +122,6 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <div id="order-view">
-      <div class="product-gallery">
-
-    <div class="main-image">
-        <img id="modal-main-image" src="" alt="">
-    </div>
-
-    <div id="modal-thumbnails" class="thumbnail-row">
-    </div>
-
-</div>
       <div class="modal-top">
         <div>
           <div class="modal-tag" id="m-tag">Hot pick</div>
@@ -139,22 +129,14 @@
         </div>
         <button class="modal-close" id="close-btn" aria-label="Close">✕</button>
       </div>
+
+      <div class="modal-gallery" id="modal-gallery" style="display:none;">
+        <img id="modal-main-image" class="modal-main-image" alt="Product photo">
+        <div id="modal-thumbnails" class="modal-thumbnails"></div>
+      </div>
+
       <div class="full-price" id="m-price">₦0</div>
       <div class="stars" id="m-stars">✅ In Stock</div>
-
-      <div class="product-details">
-    <h4>Description</h4>
-    <p id="m-description"></p>
-
-    <h4>Features</h4>
-    <ul id="m-features"></ul>
-
-    <h4>Compatibility</h4>
-    <p id="m-compatibility"></p>
-
-    <h4>Warranty</h4>
-    <p id="m-warranty"></p>
-</div>
 
       <div class="qty-row">
         <button id="qty-minus" aria-label="Decrease quantity">−</button>
@@ -199,6 +181,11 @@
   </div>
 </div>
 
+<div class="lightbox" id="image-lightbox">
+  <button class="lightbox-close" id="lightbox-close" aria-label="Close image">✕</button>
+  <img id="lightbox-image" alt="Product photo, enlarged">
+</div>
+
 <a id="whatsapp-fab" href="#" class="whatsapp-fab" aria-label="Chat with us on WhatsApp">
   <span class="whatsapp-fab-ring"></span>
   <span class="whatsapp-label">Chat with us</span>
@@ -213,14 +200,6 @@
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
-
-  <div id="image-lightbox" class="image-lightbox">
-
-    <span id="lightbox-close">&times;</span>
-
-    <img id="lightbox-image" src="" alt="">
-
-</div>
 
 </body>
 </html>
