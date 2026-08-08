@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light only">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joy-Connect Admin</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <img src="logo.png" alt="Joy-Connect Mobile" class="login-logo">
+    <h1>Admin Login</h1>
+    <p class="login-sub">Manage your products and orders</p>
+    <div class="field">
+      <label for="login-email">Email</label>
+      <input id="login-email" type="email" placeholder="you@example.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="login-btn" id="login-btn">Log In</button>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="admin-wrap" id="admin-wrap" style="display:none;">
+
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <img src="logo.png" alt="Joy-Connect Mobile" class="admin-logo">
+      <span class="admin-title">Admin Dashboard</span>
+    </div>
+    <button class="logout-btn" id="logout-btn">Log Out</button>
+  </header>
+
+  <nav class="admin-tabs">
+    <button class="admin-tab active" data-tab="products">📦 Products</button>
+    <button class="admin-tab" data-tab="orders">🧾 Orders</button>
+  </nav>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <!-- PRODUCTS TAB -->
+  <section class="tab-panel" id="tab-products">
+    <div class="panel-head">
+      <h2>Products</h2>
+      <button class="add-btn" id="add-product-btn">+ Add Product</button>
+    </div>
+    <div class="table-wrap">
+      <table class="admin-table" id="products-table">
+        <thead>
+          <tr>
+            <th>Photo</th><th>SKU</th><th>Name</th><th>Brand</th><th>Category</th>
+            <th>Price</th><th>Stock</th><th>Status</th><th>Featured</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="products-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ORDERS TAB -->
+  <section class="tab-panel" id="tab-orders" style="display:none;">
+    <div class="panel-head">
+      <h2>Orders</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="admin-table" id="orders-table">
+        <thead>
+          <tr>
+            <th>Ref</th><th>Customer</th><th>Phone</th><th>Product</th><th>Qty</th>
+            <th>Deposit</th><th>Balance</th><th>Area</th><th>Status</th><th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<!-- PRODUCT ADD/EDIT MODAL -->
+<div class="overlay" id="product-overlay">
+  <div class="product-modal">
+    <div class="product-modal-top">
+      <h3 id="product-modal-title">Add Product</h3>
+      <button class="modal-close" id="product-modal-close">✕</button>
+    </div>
+
+    <input type="hidden" id="pf-id">
+
+    <div class="field-grid">
+      <div class="field">
+        <label for="pf-sku">SKU</label>
+        <input id="pf-sku" type="text" placeholder="PWR-009">
+      </div>
+      <div class="field">
+        <label for="pf-brand">Brand</label>
+        <select id="pf-brand">
+          <option>Apple</option>
+          <option>Samsung</option>
+          <option>Tecno</option>
+          <option>Infinix</option>
+          <option>Oraimo</option>
+          <option>Itel</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="pf-name">Product Name</label>
+      <input id="pf-name" type="text" placeholder="20W Fast-Charge Power Bank">
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label for="pf-category">Category</label>
+        <select id="pf-category">
+          <option value="phone">Phone accessories</option>
+          <option value="laptop">Laptop accessories</option>
+          <option value="gaming">Gaming accessories</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="pf-stock">Stock Qty</label>
+        <input id="pf-stock" type="number" placeholder="50">
+      </div>
+    </div>
+
+    <div class="field-grid">
+      <div class="field">
+        <label for="pf-price">Price (₦)</label>
+        <input id="pf-price" type="number" placeholder="16500">
+      </div>
+      <div class="field">
+        <label for="pf-old-price">Was Price (optional)</label>
+        <input id="pf-old-price" type="number" placeholder="19900">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="pf-image">Image URL</label>
+      <input id="pf-image" type="text" placeholder="https://...supabase.co/storage/.../photo.jpg">
+    </div>
+
+    <div class="field-grid">
+      <div class="field checkbox-field">
+        <label><input id="pf-in-stock" type="checkbox" checked> In Stock</label>
+      </div>
+      <div class="field checkbox-field">
+        <label><input id="pf-featured" type="checkbox"> Featured (Best Seller badge)</label>
+      </div>
+    </div>
+
+    <div class="product-modal-error" id="product-modal-error"></div>
+
+    <div class="product-modal-actions">
+      <button class="delete-btn" id="pf-delete-btn" style="display:none;">Delete Product</button>
+      <button class="save-btn" id="pf-save-btn">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>
