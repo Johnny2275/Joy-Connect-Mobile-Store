@@ -22,4 +22,6 @@ const CONTACT_CONFIG = {
   // Contact email address customers can reach you on.
   email: 'joyconnectmobile@gmail.com',
 
+   // Paystack public key — safe to use in frontend code (never the secret key).
+  paystackPublicKey: 'pk_test_b389cdddfa99e88140082f74e44d3b72943c693a',
 };
