@@ -132,7 +132,7 @@ function renderGrid(id, items){
   `).join('');
 }
 
-const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Itel','Pin ejector'];
+const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Itel'];
 let activeBrand = 'All';
 
 function renderBrandChips(){
@@ -314,40 +314,60 @@ overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classL
 document.getElementById('qty-minus').addEventListener('click', () => { if(qty>1){qty--; updateBreakdown();} });
 document.getElementById('qty-plus').addEventListener('click', () => { qty++; updateBreakdown(); });
 
-document.getElementById('pay-btn').addEventListener('click', async () => {
+document.getElementById('pay-btn').addEventListener('click', () => {
   const name = document.getElementById('name-input').value.trim();
   const phone = document.getElementById('phone-input').value.trim();
+  const email = document.getElementById('email-input').value.trim();
   const area = document.getElementById('area-input').value.trim();
+
   if(!name || !phone){
     alert('Please add your name and phone number so we can reach you.');
     return;
   }
-
-  const payBtn = document.getElementById('pay-btn');
-  const originalLabel = payBtn.innerHTML;
-  payBtn.disabled = true;
-  payBtn.innerHTML = 'Saving your order…';
+  if(!email){
+    alert('Please add your email — Paystack needs it to process payment and send your receipt.');
+    return;
+  }
 
   const total = current.price * qty;
   const deposit = Math.round(total * DEPOSIT_PCT);
   const balance = total - deposit;
   const ref = 'JC-' + Math.floor(Math.random()*900000 + 100000);
 
-  // --- INTEGRATION POINT ---
-  // Once you have real Paystack keys, trigger PaystackPop.setup() here instead,
-  // and only run the Supabase insert below inside its callback after payment
-  // actually succeeds, with status: 'deposit_paid' instead of 'pending_payment'.
-  //
-  // const handler = PaystackPop.setup({
-  //   key: 'pk_live_xxx',
-  //   email: `${phone}@placeholder.joyconnectmobile.ng`,
-  //   amount: deposit * 100, // kobo
-  //   currency: 'NGN',
-  //   ref: ref,
-  //   metadata: { sku: current.sku, qty, name, phone, area },
-  //   callback: (response) => { ...insert below... }
-  // });
-  // handler.openIframe();
+  const payBtn = document.getElementById('pay-btn');
+  const originalLabel = payBtn.innerHTML;
+
+  const handler = PaystackPop.setup({
+    key: CONTACT_CONFIG.paystackPublicKey,
+    email: email,
+    amount: deposit * 100, // Paystack expects kobo
+    currency: 'NGN',
+    ref: ref,
+    metadata: {
+      custom_fields: [
+        { display_name: "Product", variable_name: "product", value: current.name },
+        { display_name: "Customer", variable_name: "customer", value: name },
+        { display_name: "Phone", variable_name: "phone", value: phone },
+      ]
+    },
+    callback: function(response){
+      // Payment succeeded — now save the order to Supabase
+      finalizeOrder({ name, phone, email, area, ref, total, deposit, balance, paystackRef: response.reference });
+    },
+    onClose: function(){
+      payBtn.disabled = false;
+      payBtn.innerHTML = originalLabel;
+    }
+  });
+
+  payBtn.disabled = true;
+  payBtn.innerHTML = 'Opening payment…';
+  handler.openIframe();
+});
+
+async function finalizeOrder({ name, phone, email, area, ref, total, deposit, balance, paystackRef }){
+  const payBtn = document.getElementById('pay-btn');
+  payBtn.innerHTML = 'Confirming your order…';
 
   const { error } = await sb.from('orders').insert({
     sku: current.sku,
@@ -359,24 +379,44 @@ document.getElementById('pay-btn').addEventListener('click', async () => {
     balance_amount: balance,
     customer_name: name,
     customer_phone: phone,
+    customer_email: email || null,
     delivery_area: area || null,
     reference: ref,
-    status: 'pending_payment',
+    status: 'deposit_paid',
   });
 
   payBtn.disabled = false;
-  payBtn.innerHTML = originalLabel;
+  payBtn.innerHTML = 'Pay deposit';
 
   if(error){
     console.error('Order save failed:', error);
-    alert("Sorry, we couldn't save your order right now. Please try again or contact us on WhatsApp.");
-    return;
+    alert(`Your payment went through (ref: ${ref}), but we couldn't save your order automatically. Please contact us on WhatsApp with this reference so we can confirm it manually.`);
   }
+
+  // Send confirmation email — fire and forget, doesn't block the confirmation screen.
+  if(email){
+    sb.functions.invoke('send-order-email', {
+      body: { email, name, reference: ref, productName: current.name, qty, total, deposit, balance }
+    }).catch(err => console.warn('Email confirmation could not be sent:', err));
+  }
+
+  // Build the pre-filled WhatsApp confirmation message
+  const waMessage = encodeURIComponent(
+    `Hi Joy-Connect Mobile! I just paid a deposit for my order.\n\n` +
+    `Reference: ${ref}\n` +
+    `Item: ${current.name} (x${qty})\n` +
+    `Deposit paid: ${naira(deposit)}\n` +
+    `Balance on delivery: ${naira(balance)}\n` +
+    `Name: ${name}\n` +
+    `Delivery area: ${area || 'Not specified'}`
+  );
+  document.getElementById('confirm-whatsapp-btn').href =
+    `https://wa.me/${CONTACT_CONFIG.whatsappNumber}?text=${waMessage}`;
 
   document.getElementById('confirm-ref').textContent = ref;
   orderView.style.display = 'none';
   confirmView.classList.add('open');
-});
+}
 
 // --- INIT: load real product data from Supabase, then render everything ---
 async function init(){
