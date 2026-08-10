@@ -132,7 +132,7 @@ function renderGrid(id, items){
   `).join('');
 }
 
-const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Itel'];
+const BRANDS = ['Apple','Samsung','Tecno','Infinix','Oraimo','Itel','Pin ejector'];
 let activeBrand = 'All';
 
 function renderBrandChips(){
