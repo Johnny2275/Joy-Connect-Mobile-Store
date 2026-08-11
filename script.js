@@ -248,6 +248,11 @@ function openModal(sku){
   document.getElementById('m-stars').innerHTML = current.inStock ? '✅ In Stock' : '⏳ Out of Stock';
   renderModalGallery(current);
   updateBreakdown();
+
+  // Reset delivery date/time picker for a fresh order
+  document.getElementById('date-input').value = '';
+  document.getElementById('time-input').value = '';
+
   overlay.classList.add('open');
 }
 
@@ -309,7 +314,17 @@ function attachCardHandlers(){
 }
 
 document.getElementById('close-btn').addEventListener('click', () => overlay.classList.remove('open'));
+document.getElementById('confirm-close-btn').addEventListener('click', () => {
+  overlay.classList.remove('open');
+  orderView.style.display = 'block';
+  confirmView.classList.remove('open');
+});
 overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('open'); });
+
+// --- Delivery date & time slot ---
+const dateInput = document.getElementById('date-input');
+const today = new Date().toISOString().split('T')[0];
+dateInput.min = today;
 
 document.getElementById('qty-minus').addEventListener('click', () => { if(qty>1){qty--; updateBreakdown();} });
 document.getElementById('qty-plus').addEventListener('click', () => { qty++; updateBreakdown(); });
@@ -319,6 +334,8 @@ document.getElementById('pay-btn').addEventListener('click', () => {
   const phone = document.getElementById('phone-input').value.trim();
   const email = document.getElementById('email-input').value.trim();
   const area = document.getElementById('area-input').value.trim();
+  const deliveryDate = document.getElementById('date-input').value;
+  const deliveryTime = document.getElementById('time-input').value;
 
   if(!name || !phone){
     alert('Please add your name and phone number so we can reach you.');
@@ -352,7 +369,7 @@ document.getElementById('pay-btn').addEventListener('click', () => {
     },
     callback: function(response){
       // Payment succeeded — now save the order to Supabase
-      finalizeOrder({ name, phone, email, area, ref, total, deposit, balance, paystackRef: response.reference });
+      finalizeOrder({ name, phone, email, area, deliveryDate, deliveryTime, ref, total, deposit, balance, paystackRef: response.reference });
     },
     onClose: function(){
       payBtn.disabled = false;
@@ -365,7 +382,7 @@ document.getElementById('pay-btn').addEventListener('click', () => {
   handler.openIframe();
 });
 
-async function finalizeOrder({ name, phone, email, area, ref, total, deposit, balance, paystackRef }){
+async function finalizeOrder({ name, phone, email, area, deliveryDate, deliveryTime, ref, total, deposit, balance, paystackRef }){
   const payBtn = document.getElementById('pay-btn');
   payBtn.innerHTML = 'Confirming your order…';
 
@@ -381,6 +398,8 @@ async function finalizeOrder({ name, phone, email, area, ref, total, deposit, ba
     customer_phone: phone,
     customer_email: email || null,
     delivery_area: area || null,
+    delivery_date: deliveryDate || null,
+    delivery_time_slot: deliveryTime || null,
     reference: ref,
     status: 'deposit_paid',
   });
@@ -401,6 +420,9 @@ async function finalizeOrder({ name, phone, email, area, ref, total, deposit, ba
   }
 
   // Build the pre-filled WhatsApp confirmation message
+  const dateLabel = deliveryDate
+    ? new Date(deliveryDate).toLocaleDateString('en-NG', { day:'numeric', month:'short', year:'numeric' })
+    : 'Not specified';
   const waMessage = encodeURIComponent(
     `Hi Joy-Connect Mobile! I just paid a deposit for my order.\n\n` +
     `Reference: ${ref}\n` +
@@ -408,7 +430,9 @@ async function finalizeOrder({ name, phone, email, area, ref, total, deposit, ba
     `Deposit paid: ${naira(deposit)}\n` +
     `Balance on delivery: ${naira(balance)}\n` +
     `Name: ${name}\n` +
-    `Delivery area: ${area || 'Not specified'}`
+    `Delivery area: ${area || 'Not specified'}\n` +
+    `Preferred date: ${dateLabel}\n` +
+    `Preferred time: ${deliveryTime || 'Not specified'}`
   );
   document.getElementById('confirm-whatsapp-btn').href =
     `https://wa.me/${CONTACT_CONFIG.whatsappNumber}?text=${waMessage}`;
