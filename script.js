@@ -313,56 +313,13 @@ function attachCardHandlers(){
   });
 }
 
-// --- MODAL / CONTINUE SHOPPING RESET ---
-
-function resetShoppingModal(){
-  // Close the Joy-Connect modal
+document.getElementById('close-btn').addEventListener('click', () => overlay.classList.remove('open'));
+document.getElementById('confirm-close-btn').addEventListener('click', () => {
   overlay.classList.remove('open');
-
-  // Reset views
   orderView.style.display = 'block';
   confirmView.classList.remove('open');
-
-  // Reset current product and quantity
-  current = null;
-  qty = 1;
-
-  // Reset payment button
-  const payBtn = document.getElementById('pay-btn');
-  if(payBtn){
-    payBtn.disabled = false;
-    payBtn.innerHTML = 'Pay deposit · <span id="pay-amt">₦0</span>';
-  }
-
-  // Clear search dropdown if it is open
-  if(searchDropdown){
-    searchDropdown.classList.remove('open');
-    searchDropdown.innerHTML = '';
-  }
-
-  // Make sure the page can receive clicks again
-  document.body.style.pointerEvents = 'auto';
-  document.documentElement.style.pointerEvents = 'auto';
-
-  // Scroll back to the catalogue
-  document.querySelector('.catalog')?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start'
-  });
-}
-
-// Close X button
-document.getElementById('close-btn').addEventListener('click', resetShoppingModal);
-
-// Continue Shopping button
-document.getElementById('confirm-close-btn').addEventListener('click', resetShoppingModal);
-
-// Close when clicking outside the modal
-overlay.addEventListener('click', e => {
-  if(e.target === overlay){
-    resetShoppingModal();
-  }
 });
+overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('open'); });
 
 // --- Delivery date & time slot ---
 const dateInput = document.getElementById('date-input');
@@ -389,7 +346,14 @@ document.getElementById('pay-btn').addEventListener('click', () => {
     return;
   }
 
-  const total = current.price * qty;
+  // Snapshot the product right now, so it can't be lost later even if
+  // something else on the page changes while the Paystack popup is open.
+  const orderSku = current.sku;
+  const orderName = current.name;
+  const orderPrice = current.price;
+  const orderQty = qty;
+
+  const total = orderPrice * orderQty;
   const deposit = Math.round(total * DEPOSIT_PCT);
   const balance = total - deposit;
   const ref = 'JC-' + Math.floor(Math.random()*900000 + 100000);
@@ -405,36 +369,19 @@ document.getElementById('pay-btn').addEventListener('click', () => {
     ref: ref,
     metadata: {
       custom_fields: [
-        { display_name: "Product", variable_name: "product", value: current.name },
+        { display_name: "Product", variable_name: "product", value: orderName },
         { display_name: "Customer", variable_name: "customer", value: name },
         { display_name: "Phone", variable_name: "phone", value: phone },
       ]
     },
     callback: function(response){
-  // Payment succeeded — close Paystack first
-  try {
-    if(handler && typeof handler.closeIframe === 'function'){
-      handler.closeIframe();
-    }
-  } catch(err) {
-    console.warn('Could not close Paystack iframe:', err);
-  }
-
-  // Now save the order and show confirmation
-  finalizeOrder({
-    name,
-    phone,
-    email,
-    area,
-    deliveryDate,
-    deliveryTime,
-    ref,
-    total,
-    deposit,
-    balance,
-    paystackRef: response.reference
-  });
-},
+      // Payment succeeded — now save the order to Supabase
+      finalizeOrder({
+        orderSku, orderName, orderPrice, orderQty,
+        name, phone, email, area, deliveryDate, deliveryTime,
+        ref, total, deposit, balance, paystackRef: response.reference
+      });
+    },
     onClose: function(){
       payBtn.disabled = false;
       payBtn.innerHTML = originalLabel;
@@ -446,15 +393,15 @@ document.getElementById('pay-btn').addEventListener('click', () => {
   handler.openIframe();
 });
 
-async function finalizeOrder({ name, phone, email, area, deliveryDate, deliveryTime, ref, total, deposit, balance, paystackRef }){
+async function finalizeOrder({ orderSku, orderName, orderPrice, orderQty, name, phone, email, area, deliveryDate, deliveryTime, ref, total, deposit, balance, paystackRef }){
   const payBtn = document.getElementById('pay-btn');
   payBtn.innerHTML = 'Confirming your order…';
 
   const { error } = await sb.from('orders').insert({
-    sku: current.sku,
-    product_name: current.name,
-    quantity: qty,
-    unit_price: current.price,
+    sku: orderSku,
+    product_name: orderName,
+    quantity: orderQty,
+    unit_price: orderPrice,
     total_amount: total,
     deposit_amount: deposit,
     balance_amount: balance,
@@ -478,8 +425,14 @@ async function finalizeOrder({ name, phone, email, area, deliveryDate, deliveryT
 
   // Send confirmation email — fire and forget, doesn't block the confirmation screen.
   if(email){
-    sb.functions.invoke('send-order-email', {
-      body: { email, name, reference: ref, productName: current.name, qty, total, deposit, balance }
+    fetch(`${SUPABASE_URL}/functions/v1/resend-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+      body: JSON.stringify({ email, name, reference: ref, productName: orderName, qty: orderQty, total, deposit, balance }),
     }).catch(err => console.warn('Email confirmation could not be sent:', err));
   }
 
@@ -490,7 +443,7 @@ async function finalizeOrder({ name, phone, email, area, deliveryDate, deliveryT
   const waMessage = encodeURIComponent(
     `Hi Joy-Connect Mobile! I just paid a deposit for my order.\n\n` +
     `Reference: ${ref}\n` +
-    `Item: ${current.name} (x${qty})\n` +
+    `Item: ${orderName} (x${orderQty})\n` +
     `Deposit paid: ${naira(deposit)}\n` +
     `Balance on delivery: ${naira(balance)}\n` +
     `Name: ${name}\n` +
