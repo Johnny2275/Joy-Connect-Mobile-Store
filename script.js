@@ -313,13 +313,74 @@ function attachCardHandlers(){
   });
 }
 
-document.getElementById('close-btn').addEventListener('click', () => overlay.classList.remove('open'));
-document.getElementById('confirm-close-btn').addEventListener('click', () => {
+// --- MODAL RESET / CLOSE ---
+function resetOrderModal() {
+  // Close the overlay completely
   overlay.classList.remove('open');
+
+  // Restore the normal product/order view
   orderView.style.display = 'block';
   confirmView.classList.remove('open');
+
+  // Reset current product/order state
+  current = null;
+  qty = 1;
+
+  // Reset quantity display
+  const qtyVal = document.getElementById('qty-val');
+  if (qtyVal) qtyVal.textContent = '1';
+
+  // Clear customer fields
+  const fields = [
+    'name-input',
+    'phone-input',
+    'email-input',
+    'area-input',
+    'date-input',
+    'time-input'
+  ];
+
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Reset payment button
+  const payBtn = document.getElementById('pay-btn');
+  if (payBtn) {
+    payBtn.disabled = false;
+    payBtn.innerHTML = 'Pay deposit · <span id="pay-amt">₦0</span>';
+  }
+
+  // Clear confirmation reference
+  const confirmRef = document.getElementById('confirm-ref');
+  if (confirmRef) {
+    confirmRef.textContent = 'REF-000000';
+  }
+
+  // Make absolutely sure the overlay cannot block product clicks
+  overlay.style.display = 'none';
+  overlay.style.pointerEvents = 'none';
+
+  // Restore it when another product is opened
+}
+
+// Close normal order modal
+document.getElementById('close-btn').addEventListener('click', resetOrderModal);
+
+// Continue shopping after successful payment
+document.getElementById('confirm-close-btn').addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  resetOrderModal();
 });
-overlay.addEventListener('click', e => { if(e.target === overlay) overlay.classList.remove('open'); });
+
+// Close when clicking outside modal
+overlay.addEventListener('click', e => {
+  if (e.target === overlay) {
+    resetOrderModal();
+  }
+});
 
 // --- Delivery date & time slot ---
 const dateInput = document.getElementById('date-input');
