@@ -240,6 +240,11 @@ function findProduct(sku){
 function openModal(sku){
   current = findProduct(sku);
   if(!current) return;
+
+  // Allow the overlay to receive clicks again
+  overlay.style.display = '';
+  overlay.style.pointerEvents = '';
+
   qty = 1;
   orderView.style.display = 'block';
   confirmView.classList.remove('open');
